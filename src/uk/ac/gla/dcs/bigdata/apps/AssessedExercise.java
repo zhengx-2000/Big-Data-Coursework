@@ -2,6 +2,8 @@ package uk.ac.gla.dcs.bigdata.apps;
 
 import java.io.File;
 import java.util.List;
+
+import org.apache.poi.util.SystemOutLogger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -13,6 +15,8 @@ import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
+import uk.ac.gla.dcs.bigdata.studentfunctions.NewsFilterFlatMap;
+import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 
 /**
  * This is the main class where your Spark topology should be specified.
@@ -98,9 +102,41 @@ public class AssessedExercise {
 		//----------------------------------------------------------------
 		// Your Spark Topology should be defined here
 		//----------------------------------------------------------------
-		
-		
-		return null; // replace this with the the list of DocumentRanking output by your topology
+		// TODO: Step 1: 数据预处理
+		NewsFilterFlatMap newsFilter = new NewsFilterFlatMap();
+		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(newsFilter, Encoders.bean(NewsArticleFiltered.class));
+        long validNews = newsFiltered.count();
+        System.out.println("Valid News: "+validNews);
+		System.out.println("Total News: "+news.count());
+        // newsFiltered.show();
+		// TODO: Step 2: DPH计算
+
+
+		// TODO: 数据集中平均文章长度
+
+
+		// TODO: 数据集中文章数量
+
+
+		// TODO: 文章中关键词数量
+
+
+		// TODO: 文章长度
+
+
+		// TODO: 数据集中关键词数量
+
+
+		// TODO: Step 3: DPH均分计算
+
+
+		// TODO: STEP 4: 排序输出
+
+
+		// return List<DocumentRanking>
+		// DocumentRanking: Query query, List<RankedResult> results
+		// RankedResult: String docid, NewsArticle article, double score
+		return null; // replace this with the list of DocumentRanking output by your topology
 	}
 	
 	
