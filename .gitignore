@@ -4,4 +4,5 @@ bin
 .settings
 .classpath
 Notes.docx
+.idea
 test.java
