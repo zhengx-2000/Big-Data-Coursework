@@ -36,6 +36,7 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
 
             NewsArticleFiltered news = new NewsArticleFiltered();
             news.setId(newsUnfiltered.getId());
+            news.setArticle(newsUnfiltered);
             news.setTitle(processor.process(newsUnfiltered.getTitle()));
 
             int count = 0;
@@ -51,7 +52,7 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
                     }
                 }
             }
-            news.setContents(contentList);
+            news.setContentsFiltered(contentList);
             newsFiltered.add(news);
             return newsFiltered.iterator();
         }

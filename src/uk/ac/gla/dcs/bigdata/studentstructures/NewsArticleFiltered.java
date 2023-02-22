@@ -1,5 +1,7 @@
 package uk.ac.gla.dcs.bigdata.studentstructures;
 
+import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -12,28 +14,46 @@ public class NewsArticleFiltered implements Serializable {
     private static final long serialVersionUID = 5106114149354544161L;
 
     String id; // unique article identifier
-    List<String> title; // article title after filtered
-    List<String> contents; // the contents of the article body after filtered
+    List<String> titleFiltered; // article title after filtered
+    List<String> contentsFiltered; // the contents of the article body after filtered
+    List<Integer> numTerms; // Term Frequency (count) of the term in the document
+    int newsLength; // The length of the document (in terms)
+    NewsArticle article; // raw data structure
 
     public NewsArticleFiltered() {};
 
-    public NewsArticleFiltered(String id, List<String> title, List<String> contents) {
+    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, List<Integer> numTerms, int newsLength, NewsArticle article) {
         super();
         this.id = id;
-        this.title = title;
-        this.contents = contents;
+        this.titleFiltered = title;
+        this.contentsFiltered = contentsFiltered;
+        this.numTerms = numTerms;
+        this.newsLength = newsLength;
+        this.article = article;
     }
 
     public String getId() {
         return id;
     }
 
-    public List<String> getTitle() {
-        return title;
+    public List<String> getTitleFiltered() {
+        return titleFiltered;
     }
 
-    public List<String> getContents() {
-        return contents;
+    public List<String> getContentsFiltered() {
+        return contentsFiltered;
+    }
+
+    public List<Integer> getNumTerms() {
+        return numTerms;
+    }
+
+    public int getNewsLength() {
+        return newsLength;
+    }
+
+    public NewsArticle getArticle() {
+        return article;
     }
 
     public void setId(String id) {
@@ -41,10 +61,22 @@ public class NewsArticleFiltered implements Serializable {
     }
 
     public void setTitle(List<String> title) {
-        this.title = title;
+        this.titleFiltered = title;
     }
 
-    public void setContents(List<String> contents) {
-        this.contents = contents;
+    public void setContentsFiltered(List<String> contentsFiltered) {
+        this.contentsFiltered = contentsFiltered;
+    }
+
+    public void setNumTerms(List<Integer> numTerms) {
+        this.numTerms = numTerms;
+    }
+
+    public void setNewsLength(int newsLength) {
+        this.newsLength = newsLength;
+    }
+
+    public void setArticle(NewsArticle article) {
+        this.article = article;
     }
 }

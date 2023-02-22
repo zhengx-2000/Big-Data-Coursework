@@ -105,29 +105,37 @@ public class AssessedExercise {
 		// TODO: Step 1: 数据预处理
 		NewsFilterFlatMap newsFilter = new NewsFilterFlatMap();
 		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(newsFilter, Encoders.bean(NewsArticleFiltered.class));
-        long validNews = newsFiltered.count();
-        System.out.println("Valid News: "+validNews);
-		System.out.println("Total News: "+news.count());
         // newsFiltered.show();
+
 		// TODO: Step 2: DPH计算
+		// TODO: 文章中关键词数量 List<Integer> numTerms
+		// Term Frequency (count) of the term in the document
 
 
-		// TODO: 数据集中平均文章长度
+		// TODO: 文章长度 int newsLength
+		// The length of the document (in terms)
 
 
-		// TODO: 数据集中文章数量
+		// TODO: 数据集中文章数量 int numNews
+		// The total number of documents in the corpus
+		long numNews = newsFiltered.count();
+
+		System.out.println("Valid News: " + numNews);
+		System.out.println("Total News: " + news.count());
 
 
-		// TODO: 文章中关键词数量
+		// TODO: 数据集中关键词数量 List<Integer> numTermsSum
+		// The sum of term frequencies for the term across all documents
 
 
-		// TODO: 文章长度
+		// TODO: 数据集中平均文章长度 int newsLengthAverage
+		// The average document length in the corpus (in terms)
 
 
-		// TODO: 数据集中关键词数量
+		// TODO: 计算单个单词的DPH List<Integer> dphList
 
 
-		// TODO: Step 3: DPH均分计算
+		// TODO: Step 3: DPH均分计算 int dphAverage
 
 
 		// TODO: STEP 4: 排序输出
@@ -138,6 +146,6 @@ public class AssessedExercise {
 		// RankedResult: String docid, NewsArticle article, double score
 		return null; // replace this with the list of DocumentRanking output by your topology
 	}
-	
-	
+
+
 }
