@@ -4,6 +4,7 @@ import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A structure to store the news after filtering.
@@ -16,13 +17,13 @@ public class NewsArticleFiltered implements Serializable {
     String id; // unique article identifier
     List<String> titleFiltered; // article title after filtered
     List<String> contentsFiltered; // the contents of the article body after filtered
-    List<Integer> numTerms; // Term Frequency (count) of the term in the document
+    Map<String, Integer> numTerms; // Term Frequency (count) of the term in the document
     int newsLength; // The length of the document (in terms)
     NewsArticle article; // raw data structure
 
     public NewsArticleFiltered() {};
 
-    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, List<Integer> numTerms, int newsLength, NewsArticle article) {
+    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, Map<String, Integer> numTerms, int newsLength, NewsArticle article) {
         super();
         this.id = id;
         this.titleFiltered = title;
@@ -44,7 +45,7 @@ public class NewsArticleFiltered implements Serializable {
         return contentsFiltered;
     }
 
-    public List<Integer> getNumTerms() {
+    public Map<String, Integer> getNumTerms() {
         return numTerms;
     }
 
@@ -68,7 +69,7 @@ public class NewsArticleFiltered implements Serializable {
         this.contentsFiltered = contentsFiltered;
     }
 
-    public void setNumTerms(List<Integer> numTerms) {
+    public void setNumTerms(Map<String, Integer> numTerms) {
         this.numTerms = numTerms;
     }
 
