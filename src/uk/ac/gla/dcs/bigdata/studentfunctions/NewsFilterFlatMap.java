@@ -37,7 +37,7 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
             NewsArticleFiltered news = new NewsArticleFiltered();
             news.setId(newsUnfiltered.getId());
             news.setArticle(newsUnfiltered);
-            news.setTitle(processor.process(newsUnfiltered.getTitle()));
+            news.setTitleFiltered(processor.process(newsUnfiltered.getTitle()));
 
             int count = 0;
             for(ContentItem content : newsUnfiltered.getContents()) {

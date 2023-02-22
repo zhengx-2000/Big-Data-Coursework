@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -105,6 +106,13 @@ public class AssessedExercise {
 		// TODO: Step 1: 数据预处理
 		NewsFilterFlatMap newsFilter = new NewsFilterFlatMap();
 		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(newsFilter, Encoders.bean(NewsArticleFiltered.class));
+		List<NewsArticleFiltered> tempList = newsFiltered.collectAsList();
+		for (int i = 100; i < tempList.size(); i++) {
+			if(tempList.get(i).getTitleFiltered()==null){
+				System.out.println(tempList.get(i).getTitleFiltered());
+			}
+
+		}
 
 		// TODO: Step 2: DPH计算
 		// TODO: 文章长度 int newsLength
@@ -117,6 +125,10 @@ public class AssessedExercise {
 
 		System.out.println("Valid News: " + numNews);
 		System.out.println("Total News: " + news.count());
+		/*JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(spark.sparkContext());
+		Broadcast<BandMap> mapOfBandsBV = javaSparkContext.broadcast(mapOfBands);
+		BandMap mapOfBands = new BandMap();
+		BandCalculator bc = new BandCalculator(mapOfBandsBV);*/
 
 		// TODO: 数据集中平均文章长度 int newsLengthAverage
 		// The average document length in the corpus (in terms)
@@ -125,12 +137,13 @@ public class AssessedExercise {
 		// 进入单次查询（与关键词相关）
 		for (int i = 0; i < queries.count(); i++) {
 			List<String> queryTerms = queries.collectAsList().get(i).getQueryTerms();
+			System.out.println(queryTerms);
 
-			// TODO: 单词查询中文章中关键词数量 List<Integer> numTerms
+			// TODO: 单词查询中文章中关键词数量 Map<String, Integer> numTerms
 			// Term Frequency (count) of the term in the document
 			Dataset<NewsArticleFiltered> newsCountedTerms = newsFiltered.map(new CountTermsMap(queryTerms), Encoders.bean(NewsArticleFiltered.class));
 
-			// TODO: 单次查询中数据集中关键词数量 List<Integer> numTermsSum
+			// TODO: 单次查询中数据集中关键词数量 Map<String, Integer> numTermsSum
 			// The sum of term frequencies for the term across all documents
 
 

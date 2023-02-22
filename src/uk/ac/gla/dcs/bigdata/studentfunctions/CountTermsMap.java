@@ -4,6 +4,7 @@ import org.apache.spark.api.java.function.MapFunction;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +17,7 @@ public class CountTermsMap implements MapFunction<NewsArticleFiltered, NewsArtic
     private static final long serialVersionUID = 1726581915634753139L;
 
     List<String> termsList;
-    Map<String, Integer> numTerms;
+    Map<String, Integer> numTerms = new HashMap<String, Integer>();
 
     /**
      * Default constructor

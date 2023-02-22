@@ -14,12 +14,12 @@ public class NewsArticleFiltered implements Serializable {
 
     private static final long serialVersionUID = 5106114149354544161L;
 
-    String id; // unique article identifier
-    List<String> titleFiltered; // article title after filtered
-    List<String> contentsFiltered; // the contents of the article body after filtered
-    Map<String, Integer> numTerms; // Term Frequency (count) of the term in the document
-    int newsLength; // The length of the document (in terms)
-    NewsArticle article; // raw data structure
+    private String id; // unique article identifier
+    private List<String> titleFiltered; // article title after filtered
+    private List<String> contentsFiltered; // the contents of the article body after filtered
+    private Map<String, Integer> numTerms; // Term Frequency (count) of the term in the document
+    private int newsLength; // The length of the document (in terms)
+    private NewsArticle article; // raw data structure
 
     public NewsArticleFiltered() {};
 
@@ -61,7 +61,7 @@ public class NewsArticleFiltered implements Serializable {
         this.id = id;
     }
 
-    public void setTitle(List<String> title) {
+    public void setTitleFiltered(List<String> title) {
         this.titleFiltered = title;
     }
 
