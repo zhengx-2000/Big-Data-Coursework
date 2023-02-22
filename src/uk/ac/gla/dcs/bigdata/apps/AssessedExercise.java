@@ -2,6 +2,7 @@ package uk.ac.gla.dcs.bigdata.apps;
 
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -106,31 +107,26 @@ public class AssessedExercise {
 		// TODO: Step 1: 数据预处理
 		NewsFilterFlatMap newsFilter = new NewsFilterFlatMap();
 		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(newsFilter, Encoders.bean(NewsArticleFiltered.class));
-		List<NewsArticleFiltered> tempList = newsFiltered.collectAsList();
+		/*List<NewsArticleFiltered> tempList = newsFiltered.collectAsList();
 		for (int i = 100; i < tempList.size(); i++) {
 			if(tempList.get(i).getTitleFiltered()==null){
 				System.out.println(tempList.get(i).getTitleFiltered());
 			}
-
-		}
+		}*/
 
 		// TODO: Step 2: DPH计算
-		// TODO: 文章长度 int newsLength
+		// TODO: 文章长度 int currentDocumentLength
 		// The length of the document (in terms)
 
 
-		// TODO: 数据集中文章数量 int numNews
+		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
-		long numNews = newsFiltered.count();
+		long totalDocsInCorpus = newsFiltered.count();
 
-		System.out.println("Valid News: " + numNews);
-		System.out.println("Total News: " + news.count());
-		/*JavaSparkContext javaSparkContext = JavaSparkContext.fromSparkContext(spark.sparkContext());
-		Broadcast<BandMap> mapOfBandsBV = javaSparkContext.broadcast(mapOfBands);
-		BandMap mapOfBands = new BandMap();
-		BandCalculator bc = new BandCalculator(mapOfBandsBV);*/
+		System.out.println("Valid News: " + totalDocsInCorpus);
+		//System.out.println("Total News: " + news.count());
 
-		// TODO: 数据集中平均文章长度 int newsLengthAverage
+		// TODO: 数据集中平均文章长度 double averageDocumentLengthInCorpus
 		// The average document length in the corpus (in terms)
 
 
@@ -139,15 +135,20 @@ public class AssessedExercise {
 			List<String> queryTerms = queries.collectAsList().get(i).getQueryTerms();
 			System.out.println(queryTerms);
 
-			// TODO: 单词查询中文章中关键词数量 Map<String, Integer> numTerms
+			// TODO: 单词查询中文章中关键词数量 Map<String, Short> termFrequencyInCurrentDocumentMap
 			// Term Frequency (count) of the term in the document
-			Dataset<NewsArticleFiltered> newsCountedTerms = newsFiltered.map(new CountTermsMap(queryTerms), Encoders.bean(NewsArticleFiltered.class));
+			Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.map(new CountTermsMap(queryTerms), Encoders.bean(NewsArticleFiltered.class));
 
-			// TODO: 单次查询中数据集中关键词数量 Map<String, Integer> numTermsSum
+			// TODO: 单次查询中数据集中关键词数量 Map<String, Integer> totalTermFrequencyInCorpusMap
 			// The sum of term frequencies for the term across all documents
 
 
 			// TODO: 计算单个单词的DPH List<Integer> dphList
+			// short termFrequencyInCurrentDocument,
+			// int totalTermFrequencyInCorpus,
+			// int currentDocumentLength,
+			// double averageDocumentLengthInCorpus,
+			// long totalDocsInCorpus
 
 
 			// TODO: Step 3: 单次查询DPH均分计算 int dphAverage
