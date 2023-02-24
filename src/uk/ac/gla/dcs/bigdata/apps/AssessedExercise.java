@@ -104,7 +104,7 @@ public class AssessedExercise {
 		//----------------------------------------------------------------
 		// Your Spark Topology should be defined here
 		//----------------------------------------------------------------
-		// TODO: Step 1: 数据预处理
+		// TODO: Step 1: 数据预处理 & 文章长度 int currentDocumentLength
 		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(new NewsFilterFlatMap(), Encoders.bean(NewsArticleFiltered.class));
 
 		List<Query>queryList = queries.collectAsList();
@@ -112,8 +112,8 @@ public class AssessedExercise {
 		// TODO: Step 2: DPH计算
 		// TODO: 文章长度 int currentDocumentLength
 		// The length of the document (in terms)
-		Dataset<NewsArticleFiltered> newsLengthCounted = newsFiltered.flatMap(new NewsLengthFlatMap(), Encoders.bean(NewsArticleFiltered.class));
-
+		// NewsLengthFlatMap Merged into NewsFilterFlatMap
+		// Dataset<NewsArticleFiltered> newsLengthCounted = newsFiltered.flatMap(new NewsLengthFlatMap(), Encoders.bean(NewsArticleFiltered.class));
 
 		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
@@ -125,7 +125,7 @@ public class AssessedExercise {
 
 		// TODO: 数据集中平均文章长度 double averageDocumentLengthInCorpus
 		// The average document length in the corpus (in terms)
-		NewsArticleFiltered newsLengthSumed = newsLengthCounted.reduce(new NewsLengthReducer());
+		NewsArticleFiltered newsLengthSumed = newsFiltered.reduce(new NewsLengthReducer());
 		int totalDocumentLengthInCorpus = newsLengthSumed.getCurrentDocumentLength();
 		double averageDocumentLengthInCorpus = (double)totalDocumentLengthInCorpus / (double)totalDocsInCorpus;
 		//System.out.println("Average document length: " + averageDocumentLengthInCorpus);
@@ -146,7 +146,7 @@ public class AssessedExercise {
 				// TODO: 单词查询中文章中关键词数量 short termFrequencyInCurrentDocument
 				// Term Frequency (count) of the term in the document
 				Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
-				Dataset<NewsArticleFiltered> newsTermCounted = newsLengthCounted.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
+				Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
 				// TODO: Broadcast newsTermCounted
 				Broadcast<Dataset<NewsArticleFiltered>> newsArticleBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsTermCounted);
 
