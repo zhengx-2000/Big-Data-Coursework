@@ -12,7 +12,7 @@ public class CorpusTermsReducer implements ReduceFunction<NewsArticleFiltered> {
     @Override
     public NewsArticleFiltered call(NewsArticleFiltered t1, NewsArticleFiltered t2) throws Exception {
         NewsArticleFiltered result = new NewsArticleFiltered();
-        result.setNumTerms((short) (t1.getNumTerms() + t2.getNumTerms()));
+        result.setTermFrequencyInCurrentDocument((short) (t1.getTermFrequencyInCurrentDocument() + t2.getTermFrequencyInCurrentDocument()));
         return result;
     }
 }

@@ -16,8 +16,8 @@ public class NewsArticleFiltered implements Serializable {
     private String id; // unique article identifier
     private List<String> titleFiltered; // article title after filtered
     private List<String> contentsFiltered; // the contents of the article body after filtered
-    private short numTerms; // Term Frequency (count) of the term in the document
-    private int newsLength; // The length of the document (in terms)
+    private short termFrequencyInCurrentDocument; // Term Frequency (count) of the term in the document
+    private int currentDocumentLength; // The length of the document (in terms)
     private List<Double> DPHScoreList; // The DPH Score for each query
     private double DPHScoreAverage; // Averaged DPH Score
     private NewsArticle article; // raw data structure
@@ -27,13 +27,13 @@ public class NewsArticleFiltered implements Serializable {
      */
     public NewsArticleFiltered() {};
 
-    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, short numTerms, int newsLength, List<Double> DPHScoreList, double DPHScoreAverage, NewsArticle article) {
+    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, short termFrequencyInCurrentDocument, int currentDocumentLength, List<Double> DPHScoreList, double DPHScoreAverage, NewsArticle article) {
         super();
         this.id = id;
         this.titleFiltered = title;
         this.contentsFiltered = contentsFiltered;
-        this.numTerms = numTerms;
-        this.newsLength = newsLength;
+        this.termFrequencyInCurrentDocument = termFrequencyInCurrentDocument;
+        this.currentDocumentLength = currentDocumentLength;
         this.DPHScoreList = DPHScoreList;
         this.DPHScoreAverage = DPHScoreAverage;
         this.article = article;
@@ -51,12 +51,12 @@ public class NewsArticleFiltered implements Serializable {
         return contentsFiltered;
     }
 
-    public short getNumTerms() {
-        return numTerms;
+    public short getTermFrequencyInCurrentDocument() {
+        return termFrequencyInCurrentDocument;
     }
 
-    public int getNewsLength() {
-        return newsLength;
+    public int getCurrentDocumentLength() {
+        return currentDocumentLength;
     }
 
     public List<Double> getDPHScoreList() {
@@ -83,12 +83,12 @@ public class NewsArticleFiltered implements Serializable {
         this.contentsFiltered = contentsFiltered;
     }
 
-    public void setNumTerms(short numTerms) {
-        this.numTerms = numTerms;
+    public void setTermFrequencyInCurrentDocument(short termFrequencyInCurrentDocument) {
+        this.termFrequencyInCurrentDocument = termFrequencyInCurrentDocument;
     }
 
-    public void setNewsLength(int newsLength) {
-        this.newsLength = newsLength;
+    public void setCurrentDocumentLength(int currentDocumentLength) {
+        this.currentDocumentLength = currentDocumentLength;
     }
 
     public void setDPHScoreList(List<Double> DPHScoreList) {

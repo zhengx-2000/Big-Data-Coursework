@@ -30,7 +30,7 @@ public class NewsLengthFlatMap implements FlatMapFunction<NewsArticleFiltered, N
 		List<String> contentsFiltered = news.getContentsFiltered();
     	if (titleFiltered != null & contentsFiltered != null) {
     		size = titleFiltered.size() + contentsFiltered.size();
-    		news.setNewsLength(size);
+    		news.setCurrentDocumentLength(size);
     		List<NewsArticleFiltered> temp  = new ArrayList<NewsArticleFiltered>(1);
     		temp.add(news); 
     		return temp.iterator();

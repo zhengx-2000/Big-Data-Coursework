@@ -44,7 +44,7 @@ public class CountTermsFlatMap implements FlatMapFunction<NewsArticleFiltered, N
             if (term.equals(word)) numTerms ++;
         }
         if (numTerms != 0) {
-            news.setNumTerms(numTerms);
+            news.setTermFrequencyInCurrentDocument(numTerms);
             newsList.add(news);
         }
         return newsList.iterator();

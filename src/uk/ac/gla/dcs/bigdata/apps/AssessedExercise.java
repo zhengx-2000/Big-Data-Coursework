@@ -117,13 +117,12 @@ public class AssessedExercise {
 		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
 		long totalDocsInCorpus = newsLengthCounted.count();
-
 		System.out.println("Valid News: " + totalDocsInCorpus);
 		//System.out.println("Total News: " + news.count());
 
 		// TODO: 数据集中平均文章长度 double averageDocumentLengthInCorpus
 		// The average document length in the corpus (in terms)
-
+		double averageDocumentLengthInCorpus = 0;
 
 		// 进入单次查询（与关键词相关）
 		for (int i = 0; i < queries.count(); i++) {
@@ -135,20 +134,20 @@ public class AssessedExercise {
 
 			// 分关键词查询
 			for (String queryTerm : queryTerms) {
-				// TODO: 单词查询中文章中关键词数量 short termFrequencyInCurrentDocumentMap
+				// TODO: 单词查询中文章中关键词数量 short termFrequencyInCurrentDocument
 				// Term Frequency (count) of the term in the document
 				Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
 				Dataset<NewsArticleFiltered> newsTermCounted = newsLengthCounted.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
 				System.out.println("Valid news now: " + newsTermCounted.count());
 				// Dataset<Short> newsTermCounted = newsFiltered.map(new CountTerms(queryTerm), Encoders.SHORT());
 
-				// TODO: 单次查询中数据集中关键词数量 int totalTermFrequencyInCorpusMap
+				// TODO: 单次查询中数据集中关键词数量 int totalTermFrequencyInCorpus
 				// The sum of term frequencies for the term across all documents
 				NewsArticleFiltered newsTermSumed = newsTermCounted.reduce(new CorpusTermsReducer());
-				int totalTermFrequencyInCorpusMap = newsTermSumed.getNumTerms();
-				System.out.println("Term: " + queryTerm + " Sum: " + totalTermFrequencyInCorpusMap);
+				int totalTermFrequencyInCorpus = newsTermSumed.getTermFrequencyInCurrentDocument();
+				System.out.println("Term: " + queryTerm + " Sum: " + totalTermFrequencyInCorpus);
 
-				// TODO: 计算单个单词的DPH double DPHScorePerTerm
+				// TODO: 计算单个单词的DPH List<Double> DPHScoreList, double DPHScorePerTerm
 				// short termFrequencyInCurrentDocument,
 				// int totalTermFrequencyInCorpus,
 				// int currentDocumentLength,
@@ -157,9 +156,9 @@ public class AssessedExercise {
 				newsDPHCalculated = newsTermCounted.map(new DPHScoreTermMap(), Encoders.bean(NewsArticleFiltered.class));
 
 			}
-			// TODO: Step 3: 单次查询DPH均分计算 double DPHScorePerQuery
-			if (newsDPHCalculated != null) {Dataset<NewsArticleFiltered> newsArticleFilteredAveraged = newsDPHCalculated.map(new DPHScoreQueryMap(), Encoders.bean(NewsArticleFiltered.class));}
-			else throw new NullPointerException("newsDPHCalculated is undefined!");
+			// TODO: Step 3: 单次查询DPH均分计算 double DPHScoreAverage
+			Dataset<NewsArticleFiltered> newsArticleFilteredAveraged = newsDPHCalculated.map(new DPHScoreQueryMap(), Encoders.bean(NewsArticleFiltered.class));
+
 
 			// TODO: STEP 4: 排序输出单次query的results
 
