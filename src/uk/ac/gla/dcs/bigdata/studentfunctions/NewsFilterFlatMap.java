@@ -14,6 +14,8 @@ import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 /**
  * A filter to remove news article with empty title and pre-process the title and contents.
  * @author Xiao Zheng
+ * @author Zhexu Liu
+ * @author Andi Zhang
  */
 public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArticleFiltered> {
 
@@ -37,7 +39,8 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
             NewsArticleFiltered news = new NewsArticleFiltered();
             news.setId(newsUnfiltered.getId());
             news.setArticle(newsUnfiltered);
-            news.setTitleFiltered(processor.process(newsUnfiltered.getTitle()));
+            List<String> titleFiltered = processor.process(newsUnfiltered.getTitle());
+            news.setTitleFiltered(titleFiltered);
 
             int count = 0;
             for(ContentItem content : newsUnfiltered.getContents()) {
@@ -52,6 +55,9 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
                     }
                 }
             }
+            int size = 0;
+            size = titleFiltered.size() + contentList.size();
+    		news.setCurrentDocumentLength(size);
             news.setContentsFiltered(contentList);
             newsFiltered.add(news);
             return newsFiltered.iterator();
