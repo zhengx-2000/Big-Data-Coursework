@@ -3,6 +3,7 @@ package uk.ac.gla.dcs.bigdata.studentstructures;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -25,7 +26,11 @@ public class NewsArticleFiltered implements Serializable {
     /**
      * Empty Constructor
      */
-    public NewsArticleFiltered() {};
+    public NewsArticleFiltered() {
+        titleFiltered = new ArrayList<String>();
+        contentsFiltered = new ArrayList<String>();
+        DPHScoreList = new ArrayList<Double>();
+    };
 
     public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, short termFrequencyInCurrentDocument, int currentDocumentLength, List<Double> DPHScoreList, double DPHScoreAverage, NewsArticle article) {
         super();

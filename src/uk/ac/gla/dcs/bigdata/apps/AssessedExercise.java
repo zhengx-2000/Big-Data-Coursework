@@ -118,11 +118,18 @@ public class AssessedExercise {
 		// The total number of documents in the corpus
 		long totalDocsInCorpus = newsLengthCounted.count();
 		System.out.println("Valid News: " + totalDocsInCorpus);
-		//System.out.println("Total News: " + news.count());
+		// TODO: Broadcast totalDocsInCorpus
+		// Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
+		Broadcast<Long> totalDocsInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalDocsInCorpus);
 
 		// TODO: 数据集中平均文章长度 double averageDocumentLengthInCorpus
 		// The average document length in the corpus (in terms)
-		double averageDocumentLengthInCorpus = 0;
+		NewsArticleFiltered newsLengthSumed = newsLengthCounted.reduce(new NewsLengthReducer());
+		int totalDocumentLengthInCorpus = newsLengthSumed.getCurrentDocumentLength();
+		double averageDocumentLengthInCorpus = (double)totalDocumentLengthInCorpus / (double)totalDocsInCorpus;
+		System.out.println("Average document length: " + averageDocumentLengthInCorpus);
+		// TODO: Broadcast averageDocumentLengthInCorpus
+		Broadcast<Double> averageDocumentLengthInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(averageDocumentLengthInCorpus);
 
 		// 进入单次查询（与关键词相关）
 		for (int i = 0; i < queries.count(); i++) {
@@ -138,14 +145,17 @@ public class AssessedExercise {
 				// Term Frequency (count) of the term in the document
 				Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
 				Dataset<NewsArticleFiltered> newsTermCounted = newsLengthCounted.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
+				// TODO: Broadcast newsTermCounted
 				System.out.println("Valid news now: " + newsTermCounted.count());
-				// Dataset<Short> newsTermCounted = newsFiltered.map(new CountTerms(queryTerm), Encoders.SHORT());
+				Broadcast<Dataset<NewsArticleFiltered>> newsArticleBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsTermCounted);
 
 				// TODO: 单次查询中数据集中关键词数量 int totalTermFrequencyInCorpus
 				// The sum of term frequencies for the term across all documents
 				NewsArticleFiltered newsTermSumed = newsTermCounted.reduce(new CorpusTermsReducer());
 				int totalTermFrequencyInCorpus = newsTermSumed.getTermFrequencyInCurrentDocument();
+				// TODO: Broadcast totalTermFrequencyInCorpus
 				System.out.println("Term: " + queryTerm + " Sum: " + totalTermFrequencyInCorpus);
+				Broadcast<Integer> totalTermFrequencyInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalTermFrequencyInCorpus);
 
 				// TODO: 计算单个单词的DPH List<Double> DPHScoreList, double DPHScorePerTerm
 				// short termFrequencyInCurrentDocument,
@@ -153,12 +163,19 @@ public class AssessedExercise {
 				// int currentDocumentLength,
 				// double averageDocumentLengthInCorpus,
 				// long totalDocsInCorpus
-				newsDPHCalculated = newsTermCounted.map(new DPHScoreTermMap(), Encoders.bean(NewsArticleFiltered.class));
-
+				if (newsDPHCalculated == null) newsDPHCalculated = newsTermCounted;
+				newsDPHCalculated = newsDPHCalculated.map(new DPHScoreTermMap(totalDocsInCorpusBroadcast.value(),
+						averageDocumentLengthInCorpusBroadcast.value(), totalTermFrequencyInCorpusBroadcast.value(),
+						newsArticleBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
 			}
+
+
 			// TODO: Step 3: 单次查询DPH均分计算 double DPHScoreAverage
 			Dataset<NewsArticleFiltered> newsArticleFilteredAveraged = newsDPHCalculated.map(new DPHScoreQueryMap(), Encoders.bean(NewsArticleFiltered.class));
-
+			/*List<NewsArticleFiltered> testList = newsArticleFilteredAveraged.collectAsList();
+			for (int j = 0; j < testList.size(); j++) {
+				System.out.println("DPHScore: " + testList.get(j).getDPHScoreAverage());
+			}*/
 
 			// TODO: STEP 4: 排序输出单次query的results
 
