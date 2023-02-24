@@ -13,7 +13,6 @@ import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
  * @author Zhexu Liu
  * @author Xiao Zheng
  */
-
 public class NewsLengthFlatMap implements FlatMapFunction<NewsArticleFiltered, NewsArticleFiltered>{
 
 	private static final long serialVersionUID = 5669565779118309174L;
