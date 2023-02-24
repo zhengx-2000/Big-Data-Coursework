@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.List;
 
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -102,19 +104,19 @@ public class AssessedExercise {
 		// Your Spark Topology should be defined here
 		//----------------------------------------------------------------
 		// TODO: Step 1: 数据预处理
-		NewsFilterFlatMap newsFilter = new NewsFilterFlatMap();
-		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(newsFilter, Encoders.bean(NewsArticleFiltered.class));
+		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(new NewsFilterFlatMap(), Encoders.bean(NewsArticleFiltered.class));
 
 		List<Query>queryList = queries.collectAsList();
 
 		// TODO: Step 2: DPH计算
 		// TODO: 文章长度 int currentDocumentLength
 		// The length of the document (in terms)
+		Dataset<NewsArticleFiltered> newsLengthCounted = newsFiltered.flatMap(new NewsLengthFlatMap(), Encoders.bean(NewsArticleFiltered.class));
 
 
 		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
-		long totalDocsInCorpus = newsFiltered.count();
+		long totalDocsInCorpus = newsLengthCounted.count();
 
 		System.out.println("Valid News: " + totalDocsInCorpus);
 		//System.out.println("Total News: " + news.count());
@@ -135,7 +137,8 @@ public class AssessedExercise {
 			for (String queryTerm : queryTerms) {
 				// TODO: 单词查询中文章中关键词数量 short termFrequencyInCurrentDocumentMap
 				// Term Frequency (count) of the term in the document
-				Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.flatMap(new CountTermsFlatMap(queryTerm), Encoders.bean(NewsArticleFiltered.class));
+				Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
+				Dataset<NewsArticleFiltered> newsTermCounted = newsLengthCounted.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
 				System.out.println("Valid news now: " + newsTermCounted.count());
 				// Dataset<Short> newsTermCounted = newsFiltered.map(new CountTerms(queryTerm), Encoders.SHORT());
 
