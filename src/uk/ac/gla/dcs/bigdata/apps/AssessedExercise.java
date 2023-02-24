@@ -2,10 +2,8 @@ package uk.ac.gla.dcs.bigdata.apps;
 
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -16,8 +14,7 @@ import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
-import uk.ac.gla.dcs.bigdata.studentfunctions.CountTermsMap;
-import uk.ac.gla.dcs.bigdata.studentfunctions.NewsFilterFlatMap;
+import uk.ac.gla.dcs.bigdata.studentfunctions.*;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 
 /**
@@ -107,12 +104,8 @@ public class AssessedExercise {
 		// TODO: Step 1: 数据预处理
 		NewsFilterFlatMap newsFilter = new NewsFilterFlatMap();
 		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(newsFilter, Encoders.bean(NewsArticleFiltered.class));
-		/*List<NewsArticleFiltered> tempList = newsFiltered.collectAsList();
-		for (int i = 100; i < tempList.size(); i++) {
-			if(tempList.get(i).getTitleFiltered()==null){
-				System.out.println(tempList.get(i).getTitleFiltered());
-			}
-		}*/
+
+		List<Query>queryList = queries.collectAsList();
 
 		// TODO: Step 2: DPH计算
 		// TODO: 文章长度 int currentDocumentLength
@@ -132,27 +125,38 @@ public class AssessedExercise {
 
 		// 进入单次查询（与关键词相关）
 		for (int i = 0; i < queries.count(); i++) {
-			List<String> queryTerms = queries.collectAsList().get(i).getQueryTerms();
+			// Data structure definition
+			Dataset<NewsArticleFiltered> newsDPHCalculated = null;
+
+			List<String> queryTerms = queryList.get(i).getQueryTerms();
 			System.out.println(queryTerms);
 
-			// TODO: 单词查询中文章中关键词数量 Map<String, Short> termFrequencyInCurrentDocumentMap
-			// Term Frequency (count) of the term in the document
-			Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.map(new CountTermsMap(queryTerms), Encoders.bean(NewsArticleFiltered.class));
+			// 分关键词查询
+			for (String queryTerm : queryTerms) {
+				// TODO: 单词查询中文章中关键词数量 short termFrequencyInCurrentDocumentMap
+				// Term Frequency (count) of the term in the document
+				Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.flatMap(new CountTermsFlatMap(queryTerm), Encoders.bean(NewsArticleFiltered.class));
+				System.out.println("Valid news now: " + newsTermCounted.count());
+				// Dataset<Short> newsTermCounted = newsFiltered.map(new CountTerms(queryTerm), Encoders.SHORT());
 
-			// TODO: 单次查询中数据集中关键词数量 Map<String, Integer> totalTermFrequencyInCorpusMap
-			// The sum of term frequencies for the term across all documents
+				// TODO: 单次查询中数据集中关键词数量 int totalTermFrequencyInCorpusMap
+				// The sum of term frequencies for the term across all documents
+				NewsArticleFiltered newsTermSumed = newsTermCounted.reduce(new CorpusTermsReducer());
+				int totalTermFrequencyInCorpusMap = newsTermSumed.getNumTerms();
+				System.out.println("Term: " + queryTerm + " Sum: " + totalTermFrequencyInCorpusMap);
 
+				// TODO: 计算单个单词的DPH double DPHScorePerTerm
+				// short termFrequencyInCurrentDocument,
+				// int totalTermFrequencyInCorpus,
+				// int currentDocumentLength,
+				// double averageDocumentLengthInCorpus,
+				// long totalDocsInCorpus
+				newsDPHCalculated = newsTermCounted.map(new DPHScoreTermMap(), Encoders.bean(NewsArticleFiltered.class));
 
-			// TODO: 计算单个单词的DPH List<Integer> dphList
-			// short termFrequencyInCurrentDocument,
-			// int totalTermFrequencyInCorpus,
-			// int currentDocumentLength,
-			// double averageDocumentLengthInCorpus,
-			// long totalDocsInCorpus
-
-
-			// TODO: Step 3: 单次查询DPH均分计算 int dphAverage
-
+			}
+			// TODO: Step 3: 单次查询DPH均分计算 double DPHScorePerQuery
+			if (newsDPHCalculated != null) {Dataset<NewsArticleFiltered> newsArticleFilteredAveraged = newsDPHCalculated.map(new DPHScoreQueryMap(), Encoders.bean(NewsArticleFiltered.class));}
+			else throw new NullPointerException("newsDPHCalculated is undefined!");
 
 			// TODO: STEP 4: 排序输出单次query的results
 
