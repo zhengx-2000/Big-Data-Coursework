@@ -62,7 +62,8 @@ public class AssessedExercise {
 		// Get the location of the input news articles
 		String newsFile = System.getenv("bigdata.news");
 		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
-		
+		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
+
 		// Call the student's code
 		List<DocumentRanking> results = rankDocuments(spark, queryFile, newsFile);
 		
@@ -103,7 +104,7 @@ public class AssessedExercise {
 		//----------------------------------------------------------------
 		// Your Spark Topology should be defined here
 		//----------------------------------------------------------------
-		// TODO: Step 1: 数据预处理 & 文章长度 int currentDocumentLength
+		// TODO: Step 1: 数据预处理
 		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(new NewsFilterFlatMap(), Encoders.bean(NewsArticleFiltered.class));
 
 		List<Query>queryList = queries.collectAsList();
@@ -111,13 +112,12 @@ public class AssessedExercise {
 		// TODO: Step 2: DPH计算
 		// TODO: 文章长度 int currentDocumentLength
 		// The length of the document (in terms)
-		// Dataset<NewsArticleFiltered> newsLengthCounted = newsFiltered.flatMap(new NewsLengthFlatMap(), Encoders.bean(NewsArticleFiltered.class));
-		// NewsLengthFlatMap Merged into NewsFilterFlatMap
+		Dataset<NewsArticleFiltered> newsLengthCounted = newsFiltered.flatMap(new NewsLengthFlatMap(), Encoders.bean(NewsArticleFiltered.class));
 
 
 		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
-		long totalDocsInCorpus = newsFiltered.count();
+		long totalDocsInCorpus = news.count();
 		System.out.println("Valid News: " + totalDocsInCorpus);
 		// TODO: Broadcast totalDocsInCorpus
 		// Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
@@ -125,15 +125,16 @@ public class AssessedExercise {
 
 		// TODO: 数据集中平均文章长度 double averageDocumentLengthInCorpus
 		// The average document length in the corpus (in terms)
-		NewsArticleFiltered newsLengthSumed = newsFiltered.reduce(new NewsLengthReducer());
+		NewsArticleFiltered newsLengthSumed = newsLengthCounted.reduce(new NewsLengthReducer());
 		int totalDocumentLengthInCorpus = newsLengthSumed.getCurrentDocumentLength();
 		double averageDocumentLengthInCorpus = (double)totalDocumentLengthInCorpus / (double)totalDocsInCorpus;
-		System.out.println("Average document length: " + averageDocumentLengthInCorpus);
+		//System.out.println("Average document length: " + averageDocumentLengthInCorpus);
 		// TODO: Broadcast averageDocumentLengthInCorpus
 		Broadcast<Double> averageDocumentLengthInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(averageDocumentLengthInCorpus);
 
 		// 进入单次查询（与关键词相关）
-		for (int i = 0; i < queries.count(); i++) {
+		long queriesCount = queries.count();
+		for (int i = 0; i < queriesCount; i++) {
 			// Data structure definition
 			Dataset<NewsArticleFiltered> newsDPHCalculated = null;
 
@@ -145,9 +146,8 @@ public class AssessedExercise {
 				// TODO: 单词查询中文章中关键词数量 short termFrequencyInCurrentDocument
 				// Term Frequency (count) of the term in the document
 				Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
-				Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
+				Dataset<NewsArticleFiltered> newsTermCounted = newsLengthCounted.flatMap(new CountTermsFlatMap(termBroadcast.value()), Encoders.bean(NewsArticleFiltered.class));
 				// TODO: Broadcast newsTermCounted
-				System.out.println("Valid news now: " + newsTermCounted.count());
 				Broadcast<Dataset<NewsArticleFiltered>> newsArticleBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(newsTermCounted);
 
 				// TODO: 单次查询中数据集中关键词数量 int totalTermFrequencyInCorpus

@@ -44,13 +44,15 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
 
             int count = 0;
             for(ContentItem content : newsUnfiltered.getContents()) {
-                if (content.getContent() != null & content.getSubtype() != null) {
-                    if (content.getSubtype().equals("paragraph")) {
-                        // Content is not empty and the type is paragraph
-                        contentList.addAll(processor.process(content.getContent()));
-                        count++;
-                        if (count > 4) {
-                            break;
+                if (content != null) {
+                    if (content.getContent() != null & content.getSubtype() != null) {
+                        if (content.getSubtype().equals("paragraph")) {
+                            // Content is not empty and the type is paragraph
+                            contentList.addAll(processor.process(content.getContent()));
+                            count++;
+                            if (count > 4) {
+                                break;
+                            }
                         }
                     }
                 }

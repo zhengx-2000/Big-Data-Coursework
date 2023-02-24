@@ -9,7 +9,7 @@ import java.util.List;
 
 /**
  * A mapping function to calculate the number of specific terms in a news article
- * All remove articles with no keywords, since their DPH will be set to 0 by algorithm.
+ * Removed all articles with no keyword, since their DPH will be set to 0 by algorithm.
  * @author Xiao Zheng
  */
 public class CountTermsFlatMap implements FlatMapFunction<NewsArticleFiltered, NewsArticleFiltered> {
