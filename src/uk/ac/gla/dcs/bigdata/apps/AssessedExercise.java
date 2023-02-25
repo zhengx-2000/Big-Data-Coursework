@@ -16,8 +16,11 @@ import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
+import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.studentfunctions.*;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
+
+import static org.apache.spark.sql.functions.col;
 
 /**
  * This is the main class where your Spark topology should be specified.
@@ -61,8 +64,8 @@ public class AssessedExercise {
 		
 		// Get the location of the input news articles
 		String newsFile = System.getenv("bigdata.news");
-		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
-		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
+		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
+		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
 
 		// Call the student's code
 		List<DocumentRanking> results = rankDocuments(spark, queryFile, newsFile);
@@ -117,10 +120,9 @@ public class AssessedExercise {
 
 		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
-		long totalDocsInCorpus = news.count();
+		long totalDocsInCorpus = newsFiltered.count();
 		System.out.println("Valid News: " + totalDocsInCorpus);
 		// TODO: Broadcast totalDocsInCorpus
-		// Broadcast<String> termBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryTerm);
 		Broadcast<Long> totalDocsInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalDocsInCorpus);
 
 		// TODO: 数据集中平均文章长度 double averageDocumentLengthInCorpus
@@ -133,6 +135,7 @@ public class AssessedExercise {
 		Broadcast<Double> averageDocumentLengthInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(averageDocumentLengthInCorpus);
 
 		// 进入单次查询（与关键词相关）
+		Dataset<RankedResult> rankedQueryResult;
 		long queriesCount = queries.count();
 		for (int i = 0; i < queriesCount; i++) {
 			// Data structure definition
@@ -179,13 +182,18 @@ public class AssessedExercise {
 			}*/
 
 			// TODO: STEP 4: 排序输出单次query的results
-
+			Dataset<NewsArticleFiltered> queryResult = newsArticleFilteredAveraged.orderBy(col("DPHScoreAverage").desc_nulls_last());
+			rankedQueryResult = queryResult.flatMap(new NewsArticleFilteredToRankedResultFlatMap(), Encoders.bean(RankedResult.class));
+			/*List<NewsArticleFiltered> testList = result.collectAsList();
+			for (int j = 0; j < testList.size(); j++) {
+				System.out.println("DPHScoreAverage: " + testList.get(j).getDPHScoreAverage());
+			}*/
 
 		}
 
 		// TODO: Step 5: 合并多次查询
-
-
+		Dataset<DocumentRanking> queriesResult = rankedQueryResult.map(new RankedResultToDocumentRankingMap(), Encoders.bean(DocumentRanking.class))
+		List<DocumentRanking> queriesList = queriesResult.collectAsList();
 		// return List<DocumentRanking>
 		// DocumentRanking: Query query, List<RankedResult> results
 		// RankedResult: String docid, NewsArticle article, double score
