@@ -1,6 +1,7 @@
 package uk.ac.gla.dcs.bigdata.studentstructures;
 
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
+import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,9 +20,11 @@ public class NewsArticleFiltered implements Serializable {
     private List<String> contentsFiltered; // the contents of the article body after filtered
     private short termFrequencyInCurrentDocument; // Term Frequency (count) of the term in the document
     private int currentDocumentLength; // The length of the document (in terms)
-    private List<Double> DPHScoreList; // The DPH Score for each query
+    private double DPHScore; // The DPH Score for each query
     private double DPHScoreAverage; // Averaged DPH Score
     private NewsArticle article; // raw data structure
+    private Query query; // Current Query information
+    private String term; // Current Term searched
 
     /**
      * Empty Constructor
@@ -29,19 +32,23 @@ public class NewsArticleFiltered implements Serializable {
     public NewsArticleFiltered() {
         titleFiltered = new ArrayList<String>();
         contentsFiltered = new ArrayList<String>();
-        DPHScoreList = new ArrayList<Double>();
     };
 
-    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered, short termFrequencyInCurrentDocument, int currentDocumentLength, List<Double> DPHScoreList, double DPHScoreAverage, NewsArticle article) {
+    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered,
+                               short termFrequencyInCurrentDocument, int currentDocumentLength,
+                               double DPHScore, double DPHScoreAverage, NewsArticle article,
+                               Query query, String term) {
         super();
         this.id = id;
         this.titleFiltered = title;
         this.contentsFiltered = contentsFiltered;
         this.termFrequencyInCurrentDocument = termFrequencyInCurrentDocument;
         this.currentDocumentLength = currentDocumentLength;
-        this.DPHScoreList = DPHScoreList;
+        this.DPHScore = DPHScore;
         this.DPHScoreAverage = DPHScoreAverage;
         this.article = article;
+        this.query = query;
+        this.term = term;
     }
 
     public String getId() {
@@ -64,8 +71,8 @@ public class NewsArticleFiltered implements Serializable {
         return currentDocumentLength;
     }
 
-    public List<Double> getDPHScoreList() {
-        return DPHScoreList;
+    public double getDPHScore() {
+        return DPHScore;
     }
 
     public double getDPHScoreAverage() {
@@ -74,6 +81,14 @@ public class NewsArticleFiltered implements Serializable {
 
     public NewsArticle getArticle() {
         return article;
+    }
+
+    public Query getQuery() {
+        return query;
+    }
+
+    public String getTerm() {
+        return term;
     }
 
     public void setId(String id) {
@@ -96,8 +111,8 @@ public class NewsArticleFiltered implements Serializable {
         this.currentDocumentLength = currentDocumentLength;
     }
 
-    public void setDPHScoreList(List<Double> DPHScoreList) {
-        this.DPHScoreList = DPHScoreList;
+    public void setDPHScore(double DPHScore) {
+        this.DPHScore = DPHScore;
     }
 
     public void setDPHScoreAverage(double DPHScoreAverage) {
@@ -106,5 +121,13 @@ public class NewsArticleFiltered implements Serializable {
 
     public void setArticle(NewsArticle article) {
         this.article = article;
+    }
+
+    public void setQuery(Query query) {
+        this.query = query;
+    }
+
+    public void setTerm(String term) {
+        this.term = term;
     }
 }

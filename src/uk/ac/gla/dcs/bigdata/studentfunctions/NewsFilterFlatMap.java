@@ -8,11 +8,15 @@ import org.apache.spark.api.java.function.FlatMapFunction;
 
 import uk.ac.gla.dcs.bigdata.providedstructures.ContentItem;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
+import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 import uk.ac.gla.dcs.bigdata.providedutilities.TextPreProcessor;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
+import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFilteredWithTerm;
 
 /**
  * A filter to remove news article with empty title and pre-process the title and contents.
+ * Also calculated document length (in terms)
+ * Also added key value information (query, term)
  * @author Xiao Zheng
  * @author Zhexu Liu
  * @author Andi Zhang
@@ -21,18 +25,20 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
 
     private static final long serialVersionUID = 2848720760312831312L;
 
+    private List<Query> queries;
+
     /**
      * Default constructor
      */
-    public NewsFilterFlatMap() {
-
+    public NewsFilterFlatMap(List<Query> queries) {
+        this.queries = queries;
     }
 
     @Override
     public Iterator<NewsArticleFiltered> call(NewsArticle newsUnfiltered) throws Exception {
         if (newsUnfiltered.getTitle() != null) {
             // News has a title
-            List<NewsArticleFiltered> newsFiltered = new ArrayList<NewsArticleFiltered>(1);
+            List<NewsArticleFiltered> newsFilteredList = new ArrayList<NewsArticleFiltered>();
             TextPreProcessor processor = new TextPreProcessor();
             List<String> contentList = new ArrayList<String>();
 
@@ -61,12 +67,21 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
             size = titleFiltered.size() + contentList.size();
     		news.setCurrentDocumentLength(size);
             news.setContentsFiltered(contentList);
-            newsFiltered.add(news);
-            return newsFiltered.iterator();
+
+            // Add key values here
+            for (Query q : queries){
+                for (String t : q.getQueryTerms()) {
+                    newsFilteredList.add(new NewsArticleFiltered(news.getId(), news.getTitleFiltered(), news.getContentsFiltered(),
+                            news.getTermFrequencyInCurrentDocument(), news.getCurrentDocumentLength(), news.getDPHScore(),
+                            news.getDPHScoreAverage(), news.getArticle(), q, t));
+                }
+            }
+
+            return newsFilteredList.iterator();
         }
         else {
-            List<NewsArticleFiltered> newsFiltered = new ArrayList<NewsArticleFiltered>(0);
-            return newsFiltered.iterator();
+            List<NewsArticleFiltered> newsFilteredList = new ArrayList<NewsArticleFiltered>(0);
+            return newsFilteredList.iterator();
         }
     }
 }

@@ -9,34 +9,22 @@ import java.util.List;
 
 /**
  * A mapping function to calculate the number of specific terms in a news article
- * Removed all articles with no keyword, since their DPH will be set to 0 by algorithm.
+ * Also remove news with no keywords
  * @author Xiao Zheng
  */
 public class CountTermsFlatMap implements FlatMapFunction<NewsArticleFiltered, NewsArticleFiltered> {
 
     private static final long serialVersionUID = 1726581915634753139L;
 
-    private String term;
-
     /**
      * Default constructor
      */
-    public CountTermsFlatMap(String term) {
-        this.term = term;
-    }
-
-    public void setTerm(String term) {
-        this.term = term;
-    }
-
-    public String getTerm() {
-        return term;
-    }
+    public CountTermsFlatMap() {}
 
     @Override
     public Iterator<NewsArticleFiltered> call(NewsArticleFiltered news) throws Exception {
         short numTerms = 0;
-        List<NewsArticleFiltered> newsList = new ArrayList<NewsArticleFiltered>();
+        String term = news.getTerm();
         for (String word : news.getTitleFiltered()) {
             if (term.equals(word)) numTerms ++;
         }
@@ -44,9 +32,15 @@ public class CountTermsFlatMap implements FlatMapFunction<NewsArticleFiltered, N
             if (term.equals(word)) numTerms ++;
         }
         if (numTerms != 0) {
+            List<NewsArticleFiltered> result = new ArrayList<NewsArticleFiltered>(1);
             news.setTermFrequencyInCurrentDocument(numTerms);
-            newsList.add(news);
+            result.add(news);
+            return result.iterator();
         }
-        return newsList.iterator();
+        else {
+            List<NewsArticleFiltered> result = new ArrayList<NewsArticleFiltered>(0);
+            return result.iterator();
+        }
+
     }
 }
