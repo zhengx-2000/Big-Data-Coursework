@@ -1,10 +1,7 @@
 package uk.ac.gla.dcs.bigdata.apps;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -17,9 +14,13 @@ import uk.ac.gla.dcs.bigdata.providedfunctions.QueryFormaterMap;
 import uk.ac.gla.dcs.bigdata.providedstructures.DocumentRanking;
 import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
+import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
+import uk.ac.gla.dcs.bigdata.providedutilities.TextDistanceCalculator;
 import uk.ac.gla.dcs.bigdata.studentfunctions.*;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFilteredWithTerm;
+
+import static org.apache.spark.sql.functions.col;
 
 /**
  * This is the main class where your Spark topology should be specified.
@@ -175,40 +176,52 @@ public class AssessedExercise {
 		// TODO: Step 3: 单次查询DPH均分计算 double DPHScoreAverage
 		// TODO: We need to change key for Tuple2<Query, document(id)> here
 		Dataset<NewsArticleFiltered> newsWithoutKey = newsDPHCalculated.flatMapGroups(new KeyDeleteFlatMap(), Encoders.bean(NewsArticleFiltered.class));
-
 		KeyValueGroupedDataset<Tuple2<Query, String>, NewsArticleFiltered> newsQueryKeyAdded = newsWithoutKey.groupByKey(new NewsFilteredToQueryTupleKey(), Encoders.tuple(Encoders.bean(Query.class), Encoders.STRING()));
+		Dataset<Tuple2<Query, NewsArticleFiltered>> newsArticleFilteredAveraged = newsQueryKeyAdded.mapGroups(new DPHScoreMapGroups(), Encoders.tuple(Encoders.bean(Query.class), Encoders.bean(NewsArticleFiltered.class)));
 
-		Dataset<Tuple2<Tuple2<Query, String>, NewsArticleFiltered>> newsArticleFilteredAveraged = newsQueryKeyAdded.reduceGroups(new DPHScoreReduceGroups(queryToTermNumberMapBroadcast.value()));
-		Dataset<Tuple2<Query, NewsArticleFiltered>> newsArticleFilteredAveraged1 = newsQueryKeyAdded.mapGroups(new DPHScoreMapGroups(), Encoders.tuple(Encoders.bean(Query.class), Encoders.bean(NewsArticleFiltered.class)));
-		List<Tuple2<Query, NewsArticleFiltered>> testList = newsArticleFilteredAveraged1.collectAsList();
-		Iterator<Tuple2<Query, NewsArticleFiltered>> testIterator = testList.iterator();
-		while (testIterator.hasNext()) {
-			Tuple2<Query, NewsArticleFiltered> testTuple = testIterator.next();
-			System.out.println("Query: " + testTuple._1.getQueryTerms() + " DPH: " + testTuple._2.getDPHScoreAverage());
+		// TODO: STEP 4: 输出
+		List<Tuple2<Query, NewsArticleFiltered>> resultList = newsArticleFilteredAveraged.collectAsList();
+		List<DocumentRanking> documentRankingList = new ArrayList<DocumentRanking>();
+		for (Query q: queriesList) {
+			Iterator<Tuple2<Query, NewsArticleFiltered>> resultIterator = resultList.iterator();
+			List<RankedResult> queryList = new ArrayList<RankedResult>();
+			while (resultIterator.hasNext()) {
+				Tuple2<Query, NewsArticleFiltered> testTuple = resultIterator.next();
+				if (testTuple._1.getQueryTerms().equals(q.getQueryTerms())) {
+					// Data structure transformation
+					RankedResult rankedResult = new RankedResult(testTuple._2.getId(), testTuple._2.getArticle(), testTuple._2.getDPHScoreAverage());
+					queryList.add(rankedResult);
+				}
+			}
+			// TODO: Sort and Filter
+			Collections.sort(queryList);
+			Collections.reverse(queryList);
+			List<RankedResult> finalResult = new ArrayList<RankedResult>();
+			for (RankedResult r: queryList) {
+				boolean accept = true;
+				if (finalResult.isEmpty()) {
+					finalResult.add(r);
+				}
+				for (RankedResult f : finalResult) {
+					if(TextDistanceCalculator.similarity(f.getArticle().getTitle(), r.getArticle().getTitle()) < 0.5) {
+						accept = false;
+						break;
+					}
+				}
+				if (accept) {
+					finalResult.add(r);
+				}
+				if (finalResult.size() >= 10) {
+					break;
+				}
+			}
+			for (RankedResult test : finalResult) {
+				System.out.println(test.getScore());
+			}
+			documentRankingList.add(new DocumentRanking(q, finalResult));
 		}
-		//System.out.println("newsArticleFilteredAveraged: " + newsArticleFilteredAveraged.count());
-		//List<Tuple2<Tuple2<Query, String>, NewsArticleFiltered>> testList = newsArticleFilteredAveraged.collectAsList();
-		/*for (int j = 0; j < testList.size(); j++) {
-			System.out.println("DPHScore: " + testList.get(j).getDPHScoreAverage());
-		}*/
 
-		// TODO: STEP 4: 排序输出单次query的results
-		//Dataset<NewsArticleFiltered> queryResult = newsArticleFilteredAveraged.orderBy(col("DPHScoreAverage").desc_nulls_last());
-		//rankedQueryResult = queryResult.flatMap(new NewsArticleFilteredToRankedResultFlatMap(), Encoders.bean(RankedResult.class));
-		/*List<NewsArticleFiltered> testList = result.collectAsList();
-		for (int j = 0; j < testList.size(); j++) {
-			System.out.println("DPHScoreAverage: " + testList.get(j).getDPHScoreAverage());
-		}*/
-
-
-
-		// TODO: Step 5: 合并多次查询
-		//Dataset<DocumentRanking> queriesResult = rankedQueryResult.map(new RankedResultToDocumentRankingMap(), Encoders.bean(DocumentRanking.class))
-		//List<DocumentRanking> queriesList = queriesResult.collectAsList();
-		// return List<DocumentRanking>
-		// DocumentRanking: Query query, List<RankedResult> results
-		// RankedResult: String docid, NewsArticle article, double score
-		return null; // replace this with the list of DocumentRanking output by your topology
+		return documentRankingList; // replace this with the list of DocumentRanking output by your topology
 	}
 
 
