@@ -18,9 +18,6 @@ import uk.ac.gla.dcs.bigdata.providedstructures.RankedResult;
 import uk.ac.gla.dcs.bigdata.providedutilities.TextDistanceCalculator;
 import uk.ac.gla.dcs.bigdata.studentfunctions.*;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
-import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFilteredWithTerm;
-
-import static org.apache.spark.sql.functions.col;
 
 /**
  * This is the main class where your Spark topology should be specified.
@@ -108,7 +105,7 @@ public class AssessedExercise {
 		// Your Spark Topology should be defined here
 		//----------------------------------------------------------------
 		// TODO: Step 1: 数据预处理 & 文章长度 int currentDocumentLength
-		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(new NewsFilterFlatMap(queries.collectAsList()), Encoders.bean(NewsArticleFiltered.class));
+		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(new NewsFilterFlatMap(queries.collectAsList()), Encoders.bean(NewsArticleFiltered.class)).cache(); // Use cache iff the computer has memory space larger than 5.1GB (for full dataset)
 
 		// TODO: I need a map from query to their number of terms
 		Map<String, Integer> queryToTermNumberMap = new HashMap<String, Integer>();
@@ -126,8 +123,7 @@ public class AssessedExercise {
 
 		// TODO: 数据集中文章数量 long totalDocsInCorpus
 		// The total number of documents in the corpus
-		long totalDocsInCorpus = newsFiltered.count();
-		System.out.println("Valid News: " + totalDocsInCorpus);
+		long totalDocsInCorpus = news.count();
 		// TODO: Broadcast totalDocsInCorpus
 		Broadcast<Long> totalDocsInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalDocsInCorpus);
 
@@ -142,19 +138,14 @@ public class AssessedExercise {
 
 		// TODO: 单次查询中文章中关键词数量 short termFrequencyInCurrentDocument
 		// Term Frequency (count) of the term in the document
-		Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.flatMap(new CountTermsFlatMap(), Encoders.bean(NewsArticleFiltered.class));
-		System.out.println("newsTermCounted: " + newsTermCounted.count());
-		/*List<NewsArticleFiltered> testList1 = newsTermCounted.collectAsList();
-		for (int i = 0; i < testList1.size(); i++) {
-			System.out.println("QueryTerm: " + testList1.get(i).getQuery().getQueryTerms());
-		}*/
+		Dataset<NewsArticleFiltered> newsTermCounted = newsFiltered.flatMap(new CountTermsFlatMap(), Encoders.bean(NewsArticleFiltered.class)).cache();
 
 		// TODO: Add keys for term here
 		KeyValueGroupedDataset<String, NewsArticleFiltered> newsTermKeyAdded = newsTermCounted.groupByKey(new NewsTermCountedToTermKey(), Encoders.STRING());
 
 		// TODO: 单次查询中数据集中关键词数量 int totalTermFrequencyInCorpus
 		// The sum of term frequencies for the term across all documents
-		Dataset<Tuple2<String, NewsArticleFiltered>> newsTermSumed = newsTermKeyAdded.reduceGroups(new CorpusTermsReducer());
+		Dataset<Tuple2<String, NewsArticleFiltered>> newsTermSumed = newsTermKeyAdded.reduceGroups(new CorpusTermsReducer()).cache();
 		List<Tuple2<String, NewsArticleFiltered>> newsTermSumedList = newsTermSumed.collectAsList();
 		Map<String, Short> totalTermFrequencyInCorpusMap = new HashMap<String, Short>();
 		for (Tuple2<String, NewsArticleFiltered> tuple : newsTermSumedList) totalTermFrequencyInCorpusMap.put(tuple._1, tuple._2.getTermFrequencyInCurrentDocument());
@@ -175,9 +166,9 @@ public class AssessedExercise {
 
 		// TODO: Step 3: 单次查询DPH均分计算 double DPHScoreAverage
 		// TODO: We need to change key for Tuple2<Query, document(id)> here
-		Dataset<NewsArticleFiltered> newsWithoutKey = newsDPHCalculated.flatMapGroups(new KeyDeleteFlatMap(), Encoders.bean(NewsArticleFiltered.class));
+		Dataset<NewsArticleFiltered> newsWithoutKey = newsDPHCalculated.flatMapGroups(new KeyDeleteFlatMap(), Encoders.bean(NewsArticleFiltered.class)).cache();
 		KeyValueGroupedDataset<Tuple2<Query, String>, NewsArticleFiltered> newsQueryKeyAdded = newsWithoutKey.groupByKey(new NewsFilteredToQueryTupleKey(), Encoders.tuple(Encoders.bean(Query.class), Encoders.STRING()));
-		Dataset<Tuple2<Query, NewsArticleFiltered>> newsArticleFilteredAveraged = newsQueryKeyAdded.mapGroups(new DPHScoreMapGroups(), Encoders.tuple(Encoders.bean(Query.class), Encoders.bean(NewsArticleFiltered.class)));
+		Dataset<Tuple2<Query, NewsArticleFiltered>> newsArticleFilteredAveraged = newsQueryKeyAdded.mapGroups(new DPHScoreMapGroups(), Encoders.tuple(Encoders.bean(Query.class), Encoders.bean(NewsArticleFiltered.class))).cache();
 
 		// TODO: STEP 4: 输出
 		List<Tuple2<Query, NewsArticleFiltered>> resultList = newsArticleFilteredAveraged.collectAsList();

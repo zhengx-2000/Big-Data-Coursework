@@ -11,7 +11,6 @@ import uk.ac.gla.dcs.bigdata.providedstructures.NewsArticle;
 import uk.ac.gla.dcs.bigdata.providedstructures.Query;
 import uk.ac.gla.dcs.bigdata.providedutilities.TextPreProcessor;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
-import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFilteredWithTerm;
 
 /**
  * A filter to remove news article with empty title and pre-process the title and contents.
