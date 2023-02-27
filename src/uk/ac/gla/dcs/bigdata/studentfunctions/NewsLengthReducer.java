@@ -8,6 +8,9 @@ import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
  * @author Xiao Zheng
  */
 public class NewsLengthReducer implements ReduceFunction<NewsArticleFiltered> {
+
+    private static final long serialVersionUID = 1775657003510349423L;
+
     /**
      * Default constructor
      */

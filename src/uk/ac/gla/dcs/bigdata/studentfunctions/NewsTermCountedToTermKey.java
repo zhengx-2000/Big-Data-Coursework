@@ -4,10 +4,11 @@ import org.apache.spark.api.java.function.MapFunction;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 
 /**
- * A mapping function to extract keys
+ * A mapping function to create keys based on term
  * @author Xiao Zheng
  */
 public class NewsTermCountedToTermKey implements MapFunction<NewsArticleFiltered, String> {
+
     private static final long serialVersionUID = 2710784100956936250L;
 
     @Override

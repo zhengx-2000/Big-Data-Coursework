@@ -10,6 +10,7 @@ import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
  * @author Xiao Zheng
  */
 public class NewsFilteredToQueryTupleKey implements MapFunction<NewsArticleFiltered, Tuple2<Query, String>> {
+
     private static final long serialVersionUID = 7582614491553580983L;
 
     @Override
