@@ -178,7 +178,7 @@ public class AssessedExercise {
 		// Step 3: double DPHScoreAverage
 		// Calculate average DPH Score among query terms
 		// Change key into Tuple2<Query, document(id)> here
-		Dataset<NewsArticleFiltered> newsWithoutKey = newsDPHCalculated.flatMapGroups(new KeyDeleteFlatMap(),
+		Dataset<NewsArticleFiltered> newsWithoutKey = newsDPHCalculated.flatMapGroups(new KeyDeleteFlatMapGroups(),
 				Encoders.bean(NewsArticleFiltered.class)).cache();
 		KeyValueGroupedDataset<Tuple2<Query, String>, NewsArticleFiltered> newsQueryKeyAdded = newsWithoutKey.groupByKey(
 				new NewsFilteredToQueryTupleKey(), Encoders.tuple(Encoders.bean(Query.class), Encoders.STRING()));
