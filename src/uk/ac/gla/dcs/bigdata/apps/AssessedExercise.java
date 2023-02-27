@@ -110,8 +110,16 @@ public class AssessedExercise {
 		// Generated multiple copies of news with different query and query term
 		// Step 2.1: int currentDocumentLength (stored inside the dataset)
 		// Use cache iff the computer has memory space larger than 5.1GB (for full dataset)
-		Dataset<NewsArticleFiltered> newsFiltered = news.flatMap(new NewsFilterFlatMap(queries.collectAsList()),
-				Encoders.bean(NewsArticleFiltered.class)).cache();
+		Dataset<NewsArticleFiltered> newsFiltered;
+		if (newsFile.equals("data/TREC_Washington_Post_collection.v2.jl.fix.json")) {
+			newsFiltered = news.flatMap(new NewsFilterFlatMap(queries.collectAsList()),
+					Encoders.bean(NewsArticleFiltered.class));
+		}
+		else {
+			newsFiltered = news.flatMap(new NewsFilterFlatMap(queries.collectAsList()),
+					Encoders.bean(NewsArticleFiltered.class)).cache();
+		}
+
 
 		// Step 1: Data preprocessing
 		// Creating a map from query to their number of terms
@@ -195,12 +203,12 @@ public class AssessedExercise {
 			Iterator<Tuple2<Query, NewsArticleFiltered>> resultIterator = resultList.iterator();
 			List<RankedResult> queryList = new ArrayList<RankedResult>();
 			while (resultIterator.hasNext()) {
-				Tuple2<Query, NewsArticleFiltered> testTuple = resultIterator.next();
-				if (testTuple._1.getQueryTerms().equals(q.getQueryTerms())) {
+				Tuple2<Query, NewsArticleFiltered> resultTuple = resultIterator.next();
+				if (resultTuple._1.getQueryTerms().equals(q.getQueryTerms())) {
 					// Data structure transformation
-					RankedResult rankedResult = new RankedResult(testTuple._2.getId(),
-							testTuple._2.getArticle(),
-							testTuple._2.getDPHScoreAverage());
+					RankedResult rankedResult = new RankedResult(resultTuple._2.getId(),
+							resultTuple._2.getArticle(),
+							resultTuple._2.getDPHScoreAverage());
 					queryList.add(rankedResult);
 				}
 			}
