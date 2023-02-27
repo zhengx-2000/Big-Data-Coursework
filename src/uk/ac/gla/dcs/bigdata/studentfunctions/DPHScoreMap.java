@@ -1,6 +1,8 @@
 package uk.ac.gla.dcs.bigdata.studentfunctions;
 
 import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.broadcast.Broadcast;
+
 import uk.ac.gla.dcs.bigdata.providedutilities.DPHScorer;
 import uk.ac.gla.dcs.bigdata.studentstructures.NewsArticleFiltered;
 
@@ -12,48 +14,31 @@ import java.util.Map;
  * short termFrequencyInCurrentDocument, int currentDocumentLength are from the news structure inside
  * int totalTermFrequencyInCorpus is attained through Map< String, Short> totalTermFrequencyInCorpus
  * @author Xiao Zheng
+ * @author Andi Zhang
  */
 public class DPHScoreMap implements MapFunction<NewsArticleFiltered, NewsArticleFiltered> {
 
     private static final long serialVersionUID = 5344673463262863810L;
+    
+    Broadcast<Map<String, Short>> totalTermFrequencyInCorpusBroadcast;
 
     private long totalDocsInCorpus;
     private double averageDocumentLengthInCorpus;
-    private Map<String, Short> totalTermFrequencyInCorpus;
 
 
-    public DPHScoreMap(long totalDocsInCorpus, double averageDocumentLengthInCorpus, Map<String, Short> totalTermFrequencyInCorpus){
+
+    public DPHScoreMap(long totalDocsInCorpus, double averageDocumentLengthInCorpus, Broadcast<Map<String, Short>> totalTermFrequencyInCorpusBroadcast){
         this.totalDocsInCorpus = totalDocsInCorpus;
         this.averageDocumentLengthInCorpus = averageDocumentLengthInCorpus;
-        this.totalTermFrequencyInCorpus = totalTermFrequencyInCorpus;
+        this.totalTermFrequencyInCorpusBroadcast = totalTermFrequencyInCorpusBroadcast;
     }
 
-    public void setTotalDocsInCorpus(long totalDocsInCorpus) {
-        this.totalDocsInCorpus = totalDocsInCorpus;
-    }
 
-    public void setAverageDocumentLengthInCorpus(double averageDocumentLengthInCorpus) {
-        this.averageDocumentLengthInCorpus = averageDocumentLengthInCorpus;
-    }
-
-    public void setTotalTermFrequencyInCorpus(Map<String, Short> totalTermFrequencyInCorpus) {
-        this.totalTermFrequencyInCorpus = totalTermFrequencyInCorpus;
-    }
-
-    public long getTotalDocsInCorpus() {
-        return totalDocsInCorpus;
-    }
-
-    public double getAverageDocumentLengthInCorpus() {
-        return averageDocumentLengthInCorpus;
-    }
-
-    public Map<String, Short> getTotalTermFrequencyInCorpus() {
-        return totalTermFrequencyInCorpus;
-    }
 
     @Override
     public NewsArticleFiltered call(NewsArticleFiltered news) throws Exception {
+        Map<String, Short> totalTermFrequencyInCorpus = totalTermFrequencyInCorpusBroadcast.value();
+    	
         short termFrequencyInCurrentDocument = news.getTermFrequencyInCurrentDocument();
         int currentDocumentLength = news.getCurrentDocumentLength();
         double DPHScore;

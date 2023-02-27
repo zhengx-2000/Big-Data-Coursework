@@ -32,7 +32,7 @@ public class AssessedExercise {
 
 	
 	public static void main(String[] args) {
-		
+        long startTime = System.currentTimeMillis();
 		File hadoopDIR = new File("resources/hadoop/"); // represent the hadoop directory as a Java file so we can get an absolute path for it
 		System.setProperty("hadoop.home.dir", hadoopDIR.getAbsolutePath()); // set the JVM system property so that Spark finds it
 		
@@ -61,15 +61,17 @@ public class AssessedExercise {
 		
 		// Get the location of the input news articles
 		String newsFile = System.getenv("bigdata.news");
-		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
-		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
+		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
+		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
 
 		// Call the student's code
 		List<DocumentRanking> results = rankDocuments(spark, queryFile, newsFile);
 		
 		// Close the spark session
 		spark.close();
-		
+		long endTime = System.currentTimeMillis();
+		System.out.println("Spark runtime: " + (endTime - startTime) + " ms ("+ (double)(endTime - startTime)/ 60000+"min)");
+
 		// Check if the code returned any results
 		if (results==null) System.err.println("Topology return no rankings, student code may not be implemented, skiping final write.");
 		else {
@@ -123,13 +125,8 @@ public class AssessedExercise {
 
 		// Step 1: Data preprocessing
 		// Creating a map from query to their number of terms
-		Map<String, Integer> queryToTermNumberMap = new HashMap<String, Integer>();
+
 		List<Query> queriesList = queries.collectAsList();
-		for (Query query : queriesList){
-			queryToTermNumberMap.put(query.getOriginalQuery(), query.getQueryTerms().size());
-		}
-		// Broadcast queryToTermNumberMap
-		Broadcast<Map<String, Integer>> queryToTermNumberMapBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(queryToTermNumberMap);
 
 		// Step 2: Calculate DPH
 		// Step 2.1: int currentDocumentLength
@@ -139,16 +136,12 @@ public class AssessedExercise {
 		// Step 2.2: long totalDocsInCorpus
 		// The total number of documents in the corpus
 		long totalDocsInCorpus = news.count();
-		// Broadcast totalDocsInCorpus
-		Broadcast<Long> totalDocsInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(totalDocsInCorpus);
 
 		// Step 2.3: double averageDocumentLengthInCorpus
 		// The average document length in the corpus (in terms)
 		NewsArticleFiltered newsLengthSumed = newsFiltered.reduce(new NewsLengthReducer());
 		int totalDocumentLengthInCorpus = newsLengthSumed.getCurrentDocumentLength();
 		double averageDocumentLengthInCorpus = (double)totalDocumentLengthInCorpus / (double)totalDocsInCorpus;
-		// Broadcast averageDocumentLengthInCorpus
-		Broadcast<Double> averageDocumentLengthInCorpusBroadcast = JavaSparkContext.fromSparkContext(spark.sparkContext()).broadcast(averageDocumentLengthInCorpus);
 
 		// Step 2.4: short termFrequencyInCurrentDocument
 		// Term Frequency (count) of the term in the document
@@ -178,8 +171,8 @@ public class AssessedExercise {
 		// double averageDocumentLengthInCorpus,
 		// long totalDocsInCorpus
 		KeyValueGroupedDataset<String, NewsArticleFiltered> newsDPHCalculated = newsTermKeyAdded.mapValues(
-				new DPHScoreMap(totalDocsInCorpusBroadcast.value(), averageDocumentLengthInCorpusBroadcast.value(),
-						totalTermFrequencyInCorpusBroadcast.value()),
+				new DPHScoreMap(totalDocsInCorpus, averageDocumentLengthInCorpus,
+						totalTermFrequencyInCorpusBroadcast),
 				Encoders.bean(NewsArticleFiltered.class));
 
 

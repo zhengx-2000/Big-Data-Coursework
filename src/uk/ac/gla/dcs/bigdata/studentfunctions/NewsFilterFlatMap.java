@@ -42,10 +42,8 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
             List<String> contentList = new ArrayList<String>();
 
             NewsArticleFiltered news = new NewsArticleFiltered();
-            news.setId(newsUnfiltered.getId());
             news.setArticle(newsUnfiltered);
             List<String> titleFiltered = processor.process(newsUnfiltered.getTitle());
-            news.setTitleFiltered(titleFiltered);
 
             int count = 0;
             for(ContentItem content : newsUnfiltered.getContents()) {
@@ -65,14 +63,12 @@ public class NewsFilterFlatMap implements FlatMapFunction<NewsArticle, NewsArtic
             int size = 0;
             size = titleFiltered.size() + contentList.size();
     		news.setCurrentDocumentLength(size);
-            news.setContentsFiltered(contentList);
 
             // Add key values here
             for (Query q : queries){
                 for (String t : q.getQueryTerms()) {
-                    newsFilteredList.add(new NewsArticleFiltered(news.getId(), news.getTitleFiltered(), news.getContentsFiltered(),
-                            news.getTermFrequencyInCurrentDocument(), news.getCurrentDocumentLength(), news.getDPHScore(),
-                            news.getDPHScoreAverage(), news.getArticle(), q, t));
+                    newsFilteredList.add(new NewsArticleFiltered(newsUnfiltered.getId(), titleFiltered, contentList,
+                    		size, news.getArticle(), q, t));
                 }
             }
 
