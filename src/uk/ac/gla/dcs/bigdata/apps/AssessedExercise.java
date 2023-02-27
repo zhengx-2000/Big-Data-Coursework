@@ -32,7 +32,7 @@ public class AssessedExercise {
 
 	
 	public static void main(String[] args) {
-        long startTime = System.currentTimeMillis();
+        //long startTime = System.currentTimeMillis();
 		File hadoopDIR = new File("resources/hadoop/"); // represent the hadoop directory as a Java file so we can get an absolute path for it
 		System.setProperty("hadoop.home.dir", hadoopDIR.getAbsolutePath()); // set the JVM system property so that Spark finds it
 		
@@ -61,16 +61,16 @@ public class AssessedExercise {
 		
 		// Get the location of the input news articles
 		String newsFile = System.getenv("bigdata.news");
-		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
-		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
+		if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v3.example.json"; // default is a sample of 5000 news articles
+		//if (newsFile==null) newsFile = "data/TREC_Washington_Post_collection.v2.jl.fix.json";
 
 		// Call the student's code
 		List<DocumentRanking> results = rankDocuments(spark, queryFile, newsFile);
 		
 		// Close the spark session
 		spark.close();
-		long endTime = System.currentTimeMillis();
-		System.out.println("Spark runtime: " + (endTime - startTime) + " ms ("+ (double)(endTime - startTime)/ 60000+"min)");
+		//long endTime = System.currentTimeMillis();
+		//System.out.println("Spark runtime: " + (endTime - startTime) + " ms ("+ (double)(endTime - startTime)/ 60000+"min)");
 
 		// Check if the code returned any results
 		if (results==null) System.err.println("Topology return no rankings, student code may not be implemented, skiping final write.");
@@ -124,7 +124,7 @@ public class AssessedExercise {
 
 
 		// Step 1: Data preprocessing
-		// Creating a map from query to their number of terms
+		// Get queries
 
 		List<Query> queriesList = queries.collectAsList();
 
