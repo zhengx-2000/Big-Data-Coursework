@@ -51,6 +51,19 @@ public class NewsArticleFiltered implements Serializable {
         this.term = term;
     }
 
+    public NewsArticleFiltered(String id, List<String> title, List<String> contentsFiltered,
+		            int currentDocumentLength, NewsArticle article,
+		            Query query, String term) {
+		super();
+		this.id = id;
+		this.titleFiltered = title;
+		this.contentsFiltered = contentsFiltered;
+		this.currentDocumentLength = currentDocumentLength;
+		this.article = article;
+		this.query = query;
+		this.term = term;
+	}
+    
     public String getId() {
         return id;
     }
